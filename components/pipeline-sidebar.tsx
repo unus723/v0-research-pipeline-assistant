@@ -7,11 +7,11 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { FlaskConical } from "lucide-react"
 
 interface PipelineSidebarProps {
-  activeId: number
-  onSelect: (id: number) => void
+  activeNumber: number
+  onSelect: (n: number) => void
 }
 
-export function PipelineSidebar({ activeId, onSelect }: PipelineSidebarProps) {
+export function PipelineSidebar({ activeNumber, onSelect }: PipelineSidebarProps) {
   return (
     <aside className="flex h-full w-72 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
       <div className="flex items-center gap-2 border-b border-sidebar-border px-4 py-4">
@@ -40,12 +40,12 @@ export function PipelineSidebar({ activeId, onSelect }: PipelineSidebarProps) {
       <ScrollArea className="flex-1">
         <nav className="flex flex-col gap-0.5 p-2" aria-label="Stage navigation">
           {stages.map((stage) => {
-            const isActive = stage.id === activeId
+            const isActive = stage.number === activeNumber
             return (
               <button
                 key={stage.id}
                 type="button"
-                onClick={() => onSelect(stage.id)}
+                onClick={() => onSelect(stage.number)}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
                   "flex items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors",
@@ -62,7 +62,7 @@ export function PipelineSidebar({ activeId, onSelect }: PipelineSidebarProps) {
                       : "bg-sidebar-accent text-sidebar-accent-foreground",
                   )}
                 >
-                  {stage.id}
+                  {stage.number}
                 </span>
                 <span className="truncate">{stage.title}</span>
               </button>

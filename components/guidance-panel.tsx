@@ -7,7 +7,8 @@ interface GuidancePanelProps {
 }
 
 export function GuidancePanel({ stage }: GuidancePanelProps) {
-  const { whyItMatters, commonMistakes, reviewerWarning, requiredOutput } = stage.guidance
+  const { whyThisMatters, commonMistakes, reviewerWarning, requiredOutput } = stage
+  const hasGuidance = whyThisMatters.length > 0 || commonMistakes.length > 0 || reviewerWarning.length > 0
 
   return (
     <aside className="hidden w-80 shrink-0 border-l border-border bg-card xl:block">
@@ -15,41 +16,57 @@ export function GuidancePanel({ stage }: GuidancePanelProps) {
         <div className="space-y-6 p-5">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Guidance</p>
 
-          <section className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Lightbulb className="h-4 w-4 text-chart-4" />
-              <h3 className="text-sm font-medium">Why this stage matters</h3>
-            </div>
-            <p className="text-sm leading-relaxed text-muted-foreground text-pretty">{whyItMatters}</p>
-          </section>
+          {!hasGuidance ? (
+            <p className="text-sm leading-relaxed text-muted-foreground text-pretty">
+              Guidance for this stage has not been written yet.
+            </p>
+          ) : (
+            <>
+              {whyThisMatters ? (
+                <section className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Lightbulb className="h-4 w-4 text-chart-4" />
+                    <h3 className="text-sm font-medium">Why this stage matters</h3>
+                  </div>
+                  <p className="text-sm leading-relaxed text-muted-foreground text-pretty">{whyThisMatters}</p>
+                </section>
+              ) : null}
 
-          <section className="space-y-2">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-chart-5" />
-              <h3 className="text-sm font-medium">Common mistakes</h3>
-            </div>
-            <ul className="list-disc space-y-1 pl-5 text-sm leading-relaxed text-muted-foreground">
-              {commonMistakes.map((mistake) => (
-                <li key={mistake}>{mistake}</li>
-              ))}
-            </ul>
-          </section>
+              {commonMistakes.length > 0 ? (
+                <section className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-chart-5" />
+                    <h3 className="text-sm font-medium">Common mistakes</h3>
+                  </div>
+                  <ul className="list-disc space-y-1 pl-5 text-sm leading-relaxed text-muted-foreground">
+                    {commonMistakes.map((mistake) => (
+                      <li key={mistake}>{mistake}</li>
+                    ))}
+                  </ul>
+                </section>
+              ) : null}
 
-          <section className="space-y-2">
-            <div className="flex items-center gap-2">
-              <ShieldAlert className="h-4 w-4 text-destructive" />
-              <h3 className="text-sm font-medium">Reviewer warning</h3>
-            </div>
-            <p className="text-sm leading-relaxed text-muted-foreground text-pretty">{reviewerWarning}</p>
-          </section>
+              {reviewerWarning ? (
+                <section className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <ShieldAlert className="h-4 w-4 text-destructive" />
+                    <h3 className="text-sm font-medium">Reviewer warning</h3>
+                  </div>
+                  <p className="text-sm leading-relaxed text-muted-foreground text-pretty">{reviewerWarning}</p>
+                </section>
+              ) : null}
 
-          <section className="space-y-2">
-            <div className="flex items-center gap-2">
-              <FileCheck className="h-4 w-4 text-chart-2" />
-              <h3 className="text-sm font-medium">Required output</h3>
-            </div>
-            <p className="text-sm leading-relaxed text-muted-foreground text-pretty">{requiredOutput}</p>
-          </section>
+              {requiredOutput ? (
+                <section className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <FileCheck className="h-4 w-4 text-chart-2" />
+                    <h3 className="text-sm font-medium">Required output</h3>
+                  </div>
+                  <p className="text-sm leading-relaxed text-muted-foreground text-pretty">{requiredOutput}</p>
+                </section>
+              ) : null}
+            </>
+          )}
         </div>
       </ScrollArea>
     </aside>
