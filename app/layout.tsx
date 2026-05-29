@@ -7,8 +7,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
+  title: 'Research Pipeline Assistant',
+  description: 'A guided pipeline for planning and tracking academic research projects.',
   generator: 'v0.app',
   icons: {
     icon: [

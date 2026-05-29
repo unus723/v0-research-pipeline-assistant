@@ -1,16 +1,20 @@
-export default function Home() {
+"use client"
+
+import { useState } from "react"
+import { stages } from "@/lib/stages"
+import { PipelineSidebar } from "@/components/pipeline-sidebar"
+import { StageContent } from "@/components/stage-content"
+import { GuidancePanel } from "@/components/guidance-panel"
+
+export default function Page() {
+  const [activeId, setActiveId] = useState(0)
+  const activeStage = stages.find((stage) => stage.id === activeId) ?? stages[0]
+
   return (
-    <div className="flex min-h-screen items-center justify-center font-sans">
-      <main className="flex w-full max-w-3xl flex-col items-center gap-8 px-6 py-16 text-center sm:items-start sm:text-left">
-        <div className="flex flex-col gap-4">
-          <h1 className="text-4xl font-bold tracking-tight">
-            Reserch_pipeline
-          </h1>
-          <p className="max-w-md text-lg text-muted-foreground">
-            To get started, send a prompt or modify this page directly.
-          </p>
-        </div>
-      </main>
+    <div className="flex h-screen w-full overflow-hidden">
+      <PipelineSidebar activeId={activeId} onSelect={setActiveId} />
+      <StageContent stage={activeStage} />
+      <GuidancePanel stage={activeStage} />
     </div>
-  );
+  )
 }
