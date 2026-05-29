@@ -6,12 +6,16 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { CheckCircle2 } from "lucide-react"
+import { CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react"
 
 interface StageContentProps {
   stage: Stage
   state: StageState
   onChange: (patch: Partial<StageState>) => void
+  isFirst: boolean
+  isLast: boolean
+  onPrevious: () => void
+  onNext: () => void
 }
 
 const statusConfig = {
@@ -20,7 +24,7 @@ const statusConfig = {
   complete: { label: "Complete", variant: "default" as const },
 }
 
-export function StageContent({ stage, state, onChange }: StageContentProps) {
+export function StageContent({ stage, state, onChange, isFirst, isLast, onPrevious, onNext }: StageContentProps) {
   const hasDetail = stage.explanation.length > 0
   const status = getStageStatus(stage, state)
   const ready = isStageReady(stage, state)
@@ -175,6 +179,17 @@ export function StageContent({ stage, state, onChange }: StageContentProps) {
             </div>
           </>
         )}
+
+        <nav className="mt-8 flex items-center justify-between gap-4 border-t border-border pt-6">
+          <Button variant="outline" onClick={onPrevious} disabled={isFirst}>
+            <ChevronLeft className="h-4 w-4" />
+            Previous
+          </Button>
+          <Button onClick={onNext} disabled={!state.completed || isLast}>
+            Next
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </nav>
       </div>
     </main>
   )

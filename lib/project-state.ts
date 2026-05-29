@@ -54,3 +54,15 @@ export function getStageStatus(stage: Stage, state: StageState): StageStatus {
   if (state.completed) return "complete"
   return isStageReady(stage, state) ? "ready" : "incomplete"
 }
+
+/**
+ * Sequential locking: stage 0 is always accessible. Any later stage is
+ * accessible only when every stage before it is marked complete.
+ */
+export function isStageAccessible(stageStates: Record<string, StageState>, index: number): boolean {
+  if (index <= 0) return true
+  for (let i = 0; i < index; i++) {
+    if (!stageStates[stages[i].id]?.completed) return false
+  }
+  return true
+}
