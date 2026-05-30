@@ -241,13 +241,12 @@ export default function Page() {
 
   function selectStage(id: string) {
     const index = stages.findIndex((stage) => stage.id === id)
-    if (index === -1 || !isStageAccessible(project.stages, index)) return
+    if (index === -1) return
     setProject((prev) => ({ ...prev, currentStageId: id }))
   }
 
   function goToIndex(index: number) {
     if (index < 0 || index >= stages.length) return
-    if (!isStageAccessible(project.stages, index)) return
     setProject((prev) => ({ ...prev, currentStageId: stages[index].id }))
   }
 

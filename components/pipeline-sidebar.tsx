@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Check, Download, Lock, RotateCcw, Upload } from "lucide-react"
 import { OrbitingAtom } from "@/components/interactive-visuals"
 
@@ -78,83 +79,98 @@ export function PipelineSidebar({
           <Progress value={progress} className="h-1.5" />
         </div>
 
-        <div className="grid gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={onDownloadMarkdownPlan} className="justify-start">
-            <Download className="h-4 w-4" />
-            Download Research Plan (.md)
-          </Button>
-          <Button type="button" variant="outline" size="sm" onClick={onDownloadBackup} className="justify-start">
-            <Download className="h-4 w-4" />
-            Download JSON Backup
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => importInputRef.current?.click()}
-            className="justify-start"
-          >
-            <Upload className="h-4 w-4" />
-            Import JSON Backup
-          </Button>
-          <Button type="button" variant="secondary" size="sm" onClick={onResetProject} className="justify-start">
-            <RotateCcw className="h-4 w-4" />
-            Reset Project
-          </Button>
-          <input ref={importInputRef} type="file" accept="application/json,.json" hidden onChange={handleImportChange} />
-        </div>
-      </div>
+        <Tabs defaultValue="stages" className="flex flex-col h-full">
+          <div className="px-4 pt-2 border-b border-sidebar-border/50">
+            <TabsList className="w-full">
+              <TabsTrigger value="stages" className="flex-1">Stages</TabsTrigger>
+              <TabsTrigger value="project" className="flex-1">Project Data</TabsTrigger>
+            </TabsList>
+          </div>
 
-      <div className="flex-1 overflow-hidden">
-        <ScrollArea className="h-full">
-          <nav className="flex flex-col gap-0.5 p-2" aria-label="Stage navigation">
-            {stages.map((stage, index) => {
-              const isActive = stage.id === activeId
-              const isComplete = stageStates[stage.id]?.completed
-              const isLocked = !isStageAccessible(stageStates, index)
-              return (
-                <button
-                  key={stage.id}
-                  type="button"
-                  onClick={() => onSelect(stage.id)}
-                  disabled={isLocked}
-                  aria-current={isActive ? "page" : undefined}
-                  aria-disabled={isLocked}
-                  className={cn(
-                    "flex items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors",
-                    isLocked
-                      ? "cursor-not-allowed text-muted-foreground/50"
-                      : isActive
-                        ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "flex h-6 w-6 shrink-0 items-center justify-center rounded text-xs font-medium tabular-nums",
-                      isLocked
-                        ? "bg-sidebar-accent/50 text-muted-foreground/50"
-                        : isComplete
-                          ? "bg-chart-2 text-background"
-                          : isActive
-                            ? "bg-sidebar-primary-foreground/20 text-sidebar-primary-foreground"
-                            : "bg-sidebar-accent text-sidebar-accent-foreground",
-                    )}
+          <TabsContent value="stages" className="flex-1 overflow-hidden m-0 data-[state=active]:flex data-[state=active]:flex-col">
+            <ScrollArea className="h-full">
+              <nav className="flex flex-col gap-0.5 p-2" aria-label="Stage navigation">
+                {stages.map((stage, index) => {
+                  const isActive = stage.id === activeId
+                  const isComplete = stageStates[stage.id]?.completed
+                  return (
+                    <button
+                      key={stage.id}
+                      type="button"
+                      onClick={() => onSelect(stage.id)}
+                      aria-current={isActive ? "page" : undefined}
+                      className={cn(
+                        "flex items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors",
+                        isActive
+                            ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                            : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "flex h-6 w-6 shrink-0 items-center justify-center rounded text-xs font-medium tabular-nums",
+                          isComplete
+                              ? "bg-chart-2 text-background"
+                              : isActive
+                                ? "bg-sidebar-primary-foreground/20 text-sidebar-primary-foreground"
+                                : "bg-sidebar-accent text-sidebar-accent-foreground",
+                        )}
+                      >
+                        {isComplete ? (
+                          <Check className="h-3.5 w-3.5" />
+                        ) : (
+                          stage.number
+                        )}
+                      </span>
+                      <span className="truncate">{stage.title}</span>
+                    </button>
+                  )
+                })}
+              </nav>
+            </ScrollArea>
+          </TabsContent>
+
+          <TabsContent value="project" className="flex-1 overflow-hidden m-0 data-[state=active]:flex data-[state=active]:flex-col">
+            <ScrollArea className="h-full">
+              <div className="p-4 space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Export</Label>
+                  <Button type="button" variant="outline" size="sm" onClick={onDownloadMarkdownPlan} className="w-full justify-start border-primary/20 hover:border-primary/50">
+                    <Download className="h-4 w-4 mr-2 text-primary" />
+                    Markdown Plan
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={onDownloadBackup} className="w-full justify-start border-primary/20 hover:border-primary/50">
+                    <Download className="h-4 w-4 mr-2 text-primary" />
+                    JSON Backup
+                  </Button>
+                </div>
+                
+                <div className="space-y-2 pt-2 border-t">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Import</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => importInputRef.current?.click()}
+                    className="w-full justify-start"
                   >
-                    {isLocked ? (
-                      <Lock className="h-3 w-3" />
-                    ) : isComplete ? (
-                      <Check className="h-3.5 w-3.5" />
-                    ) : (
-                      stage.number
-                    )}
-                  </span>
-                  <span className="truncate">{stage.title}</span>
-                </button>
-              )
-            })}
-          </nav>
-        </ScrollArea>
+                    <Upload className="h-4 w-4 mr-2 text-muted-foreground" />
+                    Load JSON Backup
+                  </Button>
+                  <input ref={importInputRef} type="file" accept="application/json,.json" hidden onChange={handleImportChange} />
+                </div>
+                
+                <div className="space-y-2 pt-2 border-t">
+                  <Label className="text-xs font-medium text-destructive uppercase tracking-wider">Danger Zone</Label>
+                  <Button type="button" variant="secondary" size="sm" onClick={onResetProject} className="w-full justify-start border-destructive/20 text-destructive hover:bg-destructive/10">
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Reset Pipeline
+                  </Button>
+                </div>
+              </div>
+            </ScrollArea>
+          </TabsContent>
+        </Tabs>
       </div>
     </aside>
   )
