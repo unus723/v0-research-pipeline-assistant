@@ -1,22 +1,48 @@
 "use client"
 
+import { useRef, type ChangeEvent } from "react"
 import { stages } from "@/lib/stages"
 import { isStageAccessible, type StageState } from "@/lib/project-state"
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Check, FlaskConical, Lock } from "lucide-react"
+import { Check, Download, FlaskConical, Lock, RotateCcw, Upload } from "lucide-react"
 
 interface PipelineSidebarProps {
   activeId: string
   onSelect: (id: string) => void
   projectTitle: string
+  onProjectTitleChange: (title: string) => void
+  onResetProject: () => void
+  onDownloadBackup: () => void
+  onDownloadMarkdownPlan: () => void
+  onImportBackup: (file: File) => void
   stageStates: Record<string, StageState>
 }
 
-export function PipelineSidebar({ activeId, onSelect, projectTitle, stageStates }: PipelineSidebarProps) {
+export function PipelineSidebar({
+  activeId,
+  onSelect,
+  projectTitle,
+  onProjectTitleChange,
+  onResetProject,
+  onDownloadBackup,
+  onDownloadMarkdownPlan,
+  onImportBackup,
+  stageStates,
+}: PipelineSidebarProps) {
+  const importInputRef = useRef<HTMLInputElement>(null)
   const completedCount = stages.filter((stage) => stageStates[stage.id]?.completed).length
   const progress = Math.round((completedCount / stages.length) * 100)
+
+  function handleImportChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    if (file) onImportBackup(file)
+    event.target.value = ""
+  }
 
   return (
     <aside className="flex h-full w-72 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
@@ -29,13 +55,20 @@ export function PipelineSidebar({ activeId, onSelect, projectTitle, stageStates 
         </div>
       </div>
 
-      <div className="space-y-3 border-b border-sidebar-border px-4 py-4">
-        <div>
-          <p className="text-xs font-medium text-muted-foreground">Project</p>
-          <p className={cn("text-sm", projectTitle ? "text-sidebar-foreground" : "text-muted-foreground/70 italic")}>
-            {projectTitle || "Untitled project"}
-          </p>
+      <div className="space-y-4 border-b border-sidebar-border px-4 py-4">
+        <div className="space-y-2">
+          <Label htmlFor="project-title" className="text-xs font-medium text-muted-foreground">
+            Project
+          </Label>
+          <Input
+            id="project-title"
+            value={projectTitle}
+            onChange={(event) => onProjectTitleChange(event.target.value)}
+            placeholder="Untitled project"
+            className="h-8 bg-background"
+          />
         </div>
+
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium text-muted-foreground">Progress</p>
@@ -44,6 +77,32 @@ export function PipelineSidebar({ activeId, onSelect, projectTitle, stageStates 
             </span>
           </div>
           <Progress value={progress} className="h-1.5" />
+        </div>
+
+        <div className="grid gap-2">
+          <Button type="button" variant="outline" size="sm" onClick={onDownloadMarkdownPlan} className="justify-start">
+            <Download className="h-4 w-4" />
+            Download Research Plan (.md)
+          </Button>
+          <Button type="button" variant="outline" size="sm" onClick={onDownloadBackup} className="justify-start">
+            <Download className="h-4 w-4" />
+            Download JSON Backup
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => importInputRef.current?.click()}
+            className="justify-start"
+          >
+            <Upload className="h-4 w-4" />
+            Import JSON Backup
+          </Button>
+          <Button type="button" variant="secondary" size="sm" onClick={onResetProject} className="justify-start">
+            <RotateCcw className="h-4 w-4" />
+            Reset Project
+          </Button>
+          <input ref={importInputRef} type="file" accept="application/json,.json" hidden onChange={handleImportChange} />
         </div>
       </div>
 
