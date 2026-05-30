@@ -78,9 +78,11 @@ export function PipelineSidebar({
           </div>
           <Progress value={progress} className="h-1.5" />
         </div>
+      </div>
 
-        <Tabs defaultValue="stages" className="flex flex-col h-full">
-          <div className="px-4 pt-2 border-b border-sidebar-border/50">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Tabs defaultValue="stages" className="flex flex-col h-full overflow-hidden">
+          <div className="px-4 pt-2 border-b border-sidebar-border/50 shrink-0">
             <TabsList className="w-full">
               <TabsTrigger value="stages" className="flex-1">Stages</TabsTrigger>
               <TabsTrigger value="project" className="flex-1">Project Data</TabsTrigger>
