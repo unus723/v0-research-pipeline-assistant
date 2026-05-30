@@ -48,10 +48,22 @@ export function AIMentorPanel({ projectState, isOpen, setIsOpen }: AIMentorPanel
         })
       })
       if (!res.ok) {
+        let errorMessage = "The AI Mentor is currently unavailable.";
+        let errData;
+        try {
+          errData = await res.json();
+          if (errData.error) errorMessage = typeof errData.error === 'string' ? errData.error : JSON.stringify(errData.error);
+          if (errData.details) errorMessage += `\nDetails: ${errData.details}`;
+        } catch (e) {
+          errorMessage += ` Status: ${res.status} ${res.statusText}`;
+        }
+        
         setMentorResponse({
-          response: "The AI Mentor is currently unavailable because the API key is missing or invalid.",
-          warnings: ["AI API key is not configured."],
-          suggestedNextAction: "Add an AI_API_KEY (or OPENAI_API_KEY) to a .env.local file in the project directory."
+          response: errorMessage,
+          warnings: errData?.error?.includes("configured") ? ["AI API key is not configured."] : ["Request failed."],
+          suggestedNextAction: errData?.error?.includes("configured") 
+            ? "Add an AI_API_KEY (or OPENAI_API_KEY) to your Vercel Environment Variables."
+            : "Check provider configuration or try again."
         })
         return
       }
