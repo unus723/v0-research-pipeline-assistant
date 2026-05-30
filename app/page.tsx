@@ -18,6 +18,7 @@ import { PipelineSidebar } from "@/components/pipeline-sidebar"
 import { StageContent } from "@/components/stage-content"
 import { GuidancePanel } from "@/components/guidance-panel"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { AIMentorPanel } from "@/components/ai-mentor-panel"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { Menu, Info } from "lucide-react"
@@ -216,6 +217,7 @@ export default function Page() {
   const [hasLoadedStorage, setHasLoadedStorage] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isGuidanceOpen, setIsGuidanceOpen] = useState(false)
+  const [isMentorOpen, setIsMentorOpen] = useState(false)
 
   useEffect(() => {
     setProject(loadStoredProjectState())
@@ -458,6 +460,12 @@ export default function Page() {
           <GuidancePanel stage={activeStage} />
         </div>
       </div>
+      
+      <AIMentorPanel 
+        projectState={project}
+        isOpen={isMentorOpen}
+        setIsOpen={setIsMentorOpen}
+      />
     </div>
   )
 }
