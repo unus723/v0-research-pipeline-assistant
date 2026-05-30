@@ -1,6 +1,13 @@
-# v0-research-pipeline-assistant
+# Research Pipeline Assistant
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [v0](https://v0.app).
+The Research Pipeline Assistant is a Next.js-based web application designed to help researchers organize, track, and manage their workflow. This project is bootstrapped with [v0](https://v0.app) and [Next.js](https://nextjs.org).
+
+## Features
+
+- **Pipeline Management**: Navigate through different stages of your research pipeline (e.g., Literature Review, Experimentation, Analysis).
+- **Paper Library**: A dedicated tool to organize, search, and manage your literature and reference papers.
+- **Experiment Tracker**: Keep detailed records of your experiments, configurations, and corresponding results.
+- **Research Integrity Tools**: Utilities to assure your data, citations, and analyses remain compliant and properly documented.
 
 ## Built with v0
 
@@ -10,7 +17,13 @@ This repository is linked to a [v0](https://v0.app) project. You can continue de
 
 ## Getting Started
 
-First, run the development server:
+First, install the dependencies if you haven't already:
+
+```bash
+pnpm install
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev
