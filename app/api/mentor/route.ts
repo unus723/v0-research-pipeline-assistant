@@ -2,10 +2,13 @@ import { NextResponse } from 'next/server'
 
 export async function POST(req: Request) {
   try {
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.AI_API_KEY || process.env.OPENAI_API_KEY;
     if (!apiKey) {
-      return NextResponse.json({ error: "OpenAI API key not configured." }, { status: 401 });
+      return NextResponse.json({ error: "AI API key not configured." }, { status: 401 });
     }
+
+    const apiUrl = process.env.AI_BASE_URL || "https://api.openai.com/v1/chat/completions";
+    const apiModel = process.env.AI_MODEL || "gpt-4o";
 
     const body = await req.json();
     const { currentStage, projectState, mentorAction } = body;
@@ -51,14 +54,14 @@ ${JSON.stringify(projectState, null, 2)}
 Produce your JSON output now.
 `;
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: "gpt-4o",
+        model: apiModel,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
@@ -70,7 +73,7 @@ Produce your JSON output now.
 
     if (!response.ok) {
       const err = await response.text();
-      return NextResponse.json({ error: "OpenAI API error", details: err }, { status: response.status });
+      return NextResponse.json({ error: "AI API error", details: err }, { status: response.status });
     }
 
     const data = await response.json();
