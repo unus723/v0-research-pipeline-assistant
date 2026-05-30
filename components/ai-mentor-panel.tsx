@@ -49,9 +49,9 @@ export function AIMentorPanel({ projectState, isOpen, setIsOpen }: AIMentorPanel
       })
       if (!res.ok) {
         setMentorResponse({
-          response: `Failed to contact mentor: ${res.statusText}`,
-          warnings: ["API might not be configured correctly."],
-          suggestedNextAction: "Check OPENAI_API_KEY environment variable."
+          response: "The AI Mentor is currently unavailable because the API key is missing or invalid.",
+          warnings: ["OpenAI API key is not configured."],
+          suggestedNextAction: "Add an OPENAI_API_KEY to a .env.local file in the project directory."
         })
         return
       }
