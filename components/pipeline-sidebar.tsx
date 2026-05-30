@@ -106,55 +106,57 @@ export function PipelineSidebar({
         </div>
       </div>
 
-      <ScrollArea className="flex-1">
-        <nav className="flex flex-col gap-0.5 p-2" aria-label="Stage navigation">
-          {stages.map((stage, index) => {
-            const isActive = stage.id === activeId
-            const isComplete = stageStates[stage.id]?.completed
-            const isLocked = !isStageAccessible(stageStates, index)
-            return (
-              <button
-                key={stage.id}
-                type="button"
-                onClick={() => onSelect(stage.id)}
-                disabled={isLocked}
-                aria-current={isActive ? "page" : undefined}
-                aria-disabled={isLocked}
-                className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors",
-                  isLocked
-                    ? "cursor-not-allowed text-muted-foreground/50"
-                    : isActive
-                      ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                )}
-              >
-                <span
+      <div className="flex-1 overflow-hidden">
+        <ScrollArea className="h-full">
+          <nav className="flex flex-col gap-0.5 p-2" aria-label="Stage navigation">
+            {stages.map((stage, index) => {
+              const isActive = stage.id === activeId
+              const isComplete = stageStates[stage.id]?.completed
+              const isLocked = !isStageAccessible(stageStates, index)
+              return (
+                <button
+                  key={stage.id}
+                  type="button"
+                  onClick={() => onSelect(stage.id)}
+                  disabled={isLocked}
+                  aria-current={isActive ? "page" : undefined}
+                  aria-disabled={isLocked}
                   className={cn(
-                    "flex h-6 w-6 shrink-0 items-center justify-center rounded text-xs font-medium tabular-nums",
+                    "flex items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors",
                     isLocked
-                      ? "bg-sidebar-accent/50 text-muted-foreground/50"
-                      : isComplete
-                        ? "bg-chart-2 text-background"
-                        : isActive
-                          ? "bg-sidebar-primary-foreground/20 text-sidebar-primary-foreground"
-                          : "bg-sidebar-accent text-sidebar-accent-foreground",
+                      ? "cursor-not-allowed text-muted-foreground/50"
+                      : isActive
+                        ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                   )}
                 >
-                  {isLocked ? (
-                    <Lock className="h-3 w-3" />
-                  ) : isComplete ? (
-                    <Check className="h-3.5 w-3.5" />
-                  ) : (
-                    stage.number
-                  )}
-                </span>
-                <span className="truncate">{stage.title}</span>
-              </button>
-            )
-          })}
-        </nav>
-      </ScrollArea>
+                  <span
+                    className={cn(
+                      "flex h-6 w-6 shrink-0 items-center justify-center rounded text-xs font-medium tabular-nums",
+                      isLocked
+                        ? "bg-sidebar-accent/50 text-muted-foreground/50"
+                        : isComplete
+                          ? "bg-chart-2 text-background"
+                          : isActive
+                            ? "bg-sidebar-primary-foreground/20 text-sidebar-primary-foreground"
+                            : "bg-sidebar-accent text-sidebar-accent-foreground",
+                    )}
+                  >
+                    {isLocked ? (
+                      <Lock className="h-3 w-3" />
+                    ) : isComplete ? (
+                      <Check className="h-3.5 w-3.5" />
+                    ) : (
+                      stage.number
+                    )}
+                  </span>
+                  <span className="truncate">{stage.title}</span>
+                </button>
+              )
+            })}
+          </nav>
+        </ScrollArea>
+      </div>
     </aside>
   )
 }
