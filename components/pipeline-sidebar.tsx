@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Check, Download, FlaskConical, Lock, RotateCcw, Upload } from "lucide-react"
+import { Check, Download, Lock, RotateCcw, Upload } from "lucide-react"
+import { OrbitingAtom } from "@/components/interactive-visuals"
 
 interface PipelineSidebarProps {
   activeId: string
@@ -45,11 +46,9 @@ export function PipelineSidebar({
   }
 
   return (
-    <aside className="flex h-full w-72 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
-      <div className="flex items-center gap-2 border-b border-sidebar-border px-4 py-4">
-        <div className="flex h-9 w-9 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
-          <FlaskConical className="h-5 w-5" />
-        </div>
+    <aside className="flex h-full w-full sm:w-72 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
+      <div className="flex items-center gap-3 border-b border-sidebar-border px-4 py-4">
+        <OrbitingAtom />
         <div className="leading-tight">
           <h1 className="text-sm font-semibold text-balance">Research Pipeline Assistant</h1>
         </div>

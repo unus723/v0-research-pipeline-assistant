@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { ExperimentTracker } from "@/components/experiment-tracker"
 import { PaperLibrary } from "@/components/paper-library"
 import { ResearchIntegrityTools } from "@/components/research-integrity-tools"
+import { StageVisual } from "@/components/interactive-visuals"
 import { AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react"
 
 interface StageContentProps {
@@ -121,22 +122,27 @@ export function StageContent({
   return (
     <main className="flex-1 overflow-y-auto bg-background">
       <div className="mx-auto max-w-3xl px-6 py-8">
-        <header className="mb-8">
-          <div className="mb-3 flex items-center gap-2">
-            <Badge variant="secondary" className="tabular-nums">
-              Stage {stage.number}
-            </Badge>
-            <Badge
-              variant={statusConfig[status].variant}
-              className={status === "complete" ? "bg-chart-2 text-background hover:bg-chart-2" : undefined}
-            >
-              {statusConfig[status].label}
-            </Badge>
+        <header className="mb-8 flex items-start justify-between gap-4">
+          <div>
+            <div className="mb-3 flex items-center gap-2">
+              <Badge variant="secondary" className="tabular-nums">
+                Stage {stage.number}
+              </Badge>
+              <Badge
+                variant={statusConfig[status].variant}
+                className={status === "complete" ? "bg-chart-2 text-background hover:bg-chart-2" : undefined}
+              >
+                {statusConfig[status].label}
+              </Badge>
+            </div>
+            <h2 className="text-3xl font-semibold tracking-tight text-balance">{stage.title}</h2>
+            {stage.goal ? (
+              <p className="mt-2 text-base leading-relaxed text-muted-foreground text-pretty">{stage.goal}</p>
+            ) : null}
           </div>
-          <h2 className="text-3xl font-semibold tracking-tight text-balance">{stage.title}</h2>
-          {stage.goal ? (
-            <p className="mt-2 text-base leading-relaxed text-muted-foreground text-pretty">{stage.goal}</p>
-          ) : null}
+          <div className="shrink-0 mt-1">
+            <StageVisual stageId={stage.id} />
+          </div>
         </header>
 
         {needsMorePapers ? (

@@ -52,7 +52,7 @@ export function GuidancePanel({ stage }: GuidancePanelProps) {
   const stageQuestions = stageBrutalReviewQuestions[stage.id] ?? []
 
   return (
-    <aside className="hidden w-80 shrink-0 border-l border-border bg-card xl:block">
+    <aside className="h-full w-full sm:w-80 shrink-0 border-l border-border bg-card">
       <ScrollArea className="h-full">
         <div className="space-y-6 p-5">
           <div className="space-y-3">

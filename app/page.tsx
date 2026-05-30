@@ -17,6 +17,10 @@ import {
 import { PipelineSidebar } from "@/components/pipeline-sidebar"
 import { StageContent } from "@/components/stage-content"
 import { GuidancePanel } from "@/components/guidance-panel"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { Button } from "@/components/ui/button"
+import { Menu, Info } from "lucide-react"
 
 const STORAGE_KEY = "research-pipeline-assistant:project-state:v1"
 
@@ -210,6 +214,8 @@ function createResearchPlanMarkdown(project: ProjectState) {
 export default function Page() {
   const [project, setProject] = useState<ProjectState>(() => createInitialProjectState())
   const [hasLoadedStorage, setHasLoadedStorage] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isGuidanceOpen, setIsGuidanceOpen] = useState(false)
 
   useEffect(() => {
     setProject(loadStoredProjectState())
@@ -355,44 +361,104 @@ export default function Page() {
   }
 
   return (
-    <div className="flex h-screen w-full overflow-hidden">
-      <PipelineSidebar
-        activeId={activeStage.id}
-        onSelect={selectStage}
-        projectTitle={project.projectTitle}
-        onProjectTitleChange={updateProjectTitle}
-        onResetProject={resetProject}
-        onDownloadBackup={downloadBackup}
-        onDownloadMarkdownPlan={downloadMarkdownPlan}
-        onImportBackup={importBackup}
-        stageStates={project.stages}
-      />
-      <StageContent
-        stage={activeStage}
-        state={activeState}
-        onChange={(patch) => updateStageState(activeStage.id, patch)}
-        papers={project.papers}
-        onAddPaper={addPaper}
-        onUpdatePaper={updatePaper}
-        onDeletePaper={deletePaper}
-        experiments={project.experiments}
-        onAddExperiment={addExperiment}
-        onUpdateExperiment={updateExperiment}
-        onDeleteExperiment={deleteExperiment}
-        decisions={project.decisions}
-        onAddDecision={addDecision}
-        onUpdateDecision={updateDecision}
-        onDeleteDecision={deleteDecision}
-        assumptions={project.assumptions}
-        onAddAssumption={addAssumption}
-        onUpdateAssumption={updateAssumption}
-        onDeleteAssumption={deleteAssumption}
-        isFirst={activeIndex === 0}
-        isLast={activeIndex === stages.length - 1}
-        onPrevious={() => goToIndex(activeIndex - 1)}
-        onNext={() => goToIndex(activeIndex + 1)}
-      />
-      <GuidancePanel stage={activeStage} />
+    <div className="flex flex-col h-screen w-full overflow-hidden bg-background">
+      {/* Mobile Top Bar */}
+      <div className="md:hidden flex flex-none items-center justify-between border-b px-4 py-3 bg-muted/30">
+        <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="icon">
+              <Menu className="h-5 w-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="p-0 w-72">
+            <SheetHeader className="sr-only">
+              <SheetTitle>Pipeline Navigation</SheetTitle>
+            </SheetHeader>
+            <PipelineSidebar
+              activeId={activeStage.id}
+              onSelect={(id) => {
+                selectStage(id)
+                setIsSidebarOpen(false)
+              }}
+              projectTitle={project.projectTitle}
+              onProjectTitleChange={updateProjectTitle}
+              onResetProject={resetProject}
+              onDownloadBackup={downloadBackup}
+              onDownloadMarkdownPlan={downloadMarkdownPlan}
+              onImportBackup={importBackup}
+              stageStates={project.stages}
+            />
+          </SheetContent>
+        </Sheet>
+        
+        <h1 className="text-sm font-semibold truncate px-2 text-foreground">{activeStage.title}</h1>
+        
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <Sheet open={isGuidanceOpen} onOpenChange={setIsGuidanceOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Info className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="p-0 w-80 sm:w-96">
+              <SheetHeader className="sr-only">
+                <SheetTitle>Guidance</SheetTitle>
+              </SheetHeader>
+              <GuidancePanel stage={activeStage} />
+            </SheetContent>
+          </Sheet>
+        </div>
+      </div>
+
+      <div className="flex flex-1 overflow-hidden">
+        <div className="hidden md:block h-full">
+          <PipelineSidebar
+            activeId={activeStage.id}
+            onSelect={selectStage}
+            projectTitle={project.projectTitle}
+            onProjectTitleChange={updateProjectTitle}
+            onResetProject={resetProject}
+            onDownloadBackup={downloadBackup}
+            onDownloadMarkdownPlan={downloadMarkdownPlan}
+            onImportBackup={importBackup}
+            stageStates={project.stages}
+          />
+        </div>
+        <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+          <div className="hidden md:flex justify-end p-4 pb-0">
+            <ThemeToggle />
+          </div>
+          <StageContent
+            stage={activeStage}
+            state={activeState}
+            onChange={(patch) => updateStageState(activeStage.id, patch)}
+            papers={project.papers}
+            onAddPaper={addPaper}
+            onUpdatePaper={updatePaper}
+            onDeletePaper={deletePaper}
+            experiments={project.experiments}
+            onAddExperiment={addExperiment}
+            onUpdateExperiment={updateExperiment}
+            onDeleteExperiment={deleteExperiment}
+            decisions={project.decisions}
+            onAddDecision={addDecision}
+            onUpdateDecision={updateDecision}
+            onDeleteDecision={deleteDecision}
+            assumptions={project.assumptions}
+            onAddAssumption={addAssumption}
+            onUpdateAssumption={updateAssumption}
+            onDeleteAssumption={deleteAssumption}
+            isFirst={activeIndex === 0}
+            isLast={activeIndex === stages.length - 1}
+            onPrevious={() => goToIndex(activeIndex - 1)}
+            onNext={() => goToIndex(activeIndex + 1)}
+          />
+        </div>
+        <div className="hidden xl:block h-full">
+          <GuidancePanel stage={activeStage} />
+        </div>
+      </div>
     </div>
   )
 }
