@@ -47,7 +47,7 @@ export function PipelineSidebar({
   }
 
   return (
-    <aside className="flex h-full w-full sm:w-72 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
+    <aside className="flex h-full min-h-0 w-full shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground sm:w-72">
       <div className="flex items-center gap-3 border-b border-sidebar-border px-4 py-4">
         <OrbitingAtom />
         <div className="leading-tight">
@@ -80,8 +80,8 @@ export function PipelineSidebar({
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Tabs defaultValue="stages" className="flex flex-col h-full overflow-hidden">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <Tabs defaultValue="stages" className="flex h-full min-h-0 flex-col overflow-hidden">
           <div className="px-4 pt-2 border-b border-sidebar-border/50 shrink-0">
             <TabsList className="w-full">
               <TabsTrigger value="stages" className="flex-1">Stages</TabsTrigger>
@@ -89,8 +89,8 @@ export function PipelineSidebar({
             </TabsList>
           </div>
 
-          <TabsContent value="stages" className="flex-1 overflow-hidden m-0 data-[state=active]:flex data-[state=active]:flex-col">
-            <ScrollArea className="h-full">
+          <TabsContent value="stages" className="m-0 flex-1 min-h-0 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col">
+            <ScrollArea className="h-full min-h-0">
               <nav className="flex flex-col gap-0.5 p-2" aria-label="Stage navigation">
                 {stages.map((stage, index) => {
                   const isActive = stage.id === activeId
@@ -132,8 +132,8 @@ export function PipelineSidebar({
             </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="project" className="flex-1 overflow-hidden m-0 data-[state=active]:flex data-[state=active]:flex-col">
-            <ScrollArea className="h-full">
+          <TabsContent value="project" className="m-0 flex-1 min-h-0 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col">
+            <ScrollArea className="h-full min-h-0">
               <div className="p-4 space-y-4">
                 <div className="space-y-2">
                   <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Export</Label>

@@ -412,8 +412,8 @@ export default function Page() {
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
-        <div className="hidden md:block h-full">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        <div className="hidden md:block h-full min-h-0">
           <PipelineSidebar
             activeId={activeStage.id}
             onSelect={selectStage}
@@ -426,7 +426,7 @@ export default function Page() {
             stageStates={project.stages}
           />
         </div>
-        <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+        <div className="flex-1 flex min-h-0 flex-col min-w-0 overflow-y-auto">
           <div className="hidden md:flex justify-end p-4 pb-0">
             <ThemeToggle />
           </div>
@@ -456,7 +456,7 @@ export default function Page() {
             onNext={() => goToIndex(activeIndex + 1)}
           />
         </div>
-        <div className="hidden xl:block h-full">
+        <div className="hidden xl:block h-full min-h-0">
           <GuidancePanel stage={activeStage} />
         </div>
       </div>

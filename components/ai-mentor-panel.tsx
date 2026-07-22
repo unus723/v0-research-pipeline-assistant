@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Sparkles, X, ChevronRight, AlertTriangle } from "lucide-react"
+import { Sparkles, X, ChevronRight, AlertTriangle, ChevronsLeft, ChevronsRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
@@ -26,6 +26,7 @@ const COMMON_ACTIONS = [
 
 export function AIMentorPanel({ projectState, isOpen, setIsOpen }: AIMentorPanelProps) {
   const [loadingAction, setLoadingAction] = useState<string | null>(null)
+  const [isCollapsed, setIsCollapsed] = useState(false)
   const [mentorResponse, setMentorResponse] = useState<{
     response: string
     warnings: string[]
@@ -94,19 +95,35 @@ export function AIMentorPanel({ projectState, isOpen, setIsOpen }: AIMentorPanel
   }
 
   return (
-    <div className="fixed inset-y-0 right-0 w-80 sm:w-96 bg-background border-l shadow-2xl z-50 flex flex-col transform transition-transform duration-300">
-      <div className="flex items-center justify-between p-4 border-b">
+    <div
+      className={[
+        "fixed inset-y-0 right-0 z-50 flex min-h-0 flex-col overflow-hidden border-l bg-background shadow-2xl transform transition-all duration-300",
+        isCollapsed ? "w-20" : "w-80 sm:w-96",
+      ].join(" ")}
+    >
+      <div className="flex items-center justify-between gap-2 border-b p-4">
         <div className="flex items-center space-x-2">
           <Sparkles className="h-5 w-5 text-indigo-500" />
-          <h2 className="font-semibold text-lg">AI Mentor</h2>
+          {!isCollapsed ? <h2 className="text-lg font-semibold">AI Mentor</h2> : null}
         </div>
-        <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
-          <X className="h-5 w-5" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsCollapsed((current) => !current)}
+            aria-label={isCollapsed ? "Expand AI Mentor" : "Collapse AI Mentor"}
+          >
+            {isCollapsed ? <ChevronsLeft className="h-5 w-5" /> : <ChevronsRight className="h-5 w-5" />}
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} aria-label="Close AI Mentor">
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
       </div>
 
-      <ScrollArea className="flex-1 p-4">
-        <div className="space-y-6">
+      {!isCollapsed ? (
+        <ScrollArea className="min-h-0 flex-1">
+          <div className="space-y-6 p-4 pr-6 pb-6">
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">
               I can analyze your project state and offer guidance. What would you like help with?
@@ -173,8 +190,9 @@ export function AIMentorPanel({ projectState, isOpen, setIsOpen }: AIMentorPanel
               </Card>
             </div>
           )}
-        </div>
-      </ScrollArea>
+          </div>
+        </ScrollArea>
+      ) : null}
     </div>
   )
 }
