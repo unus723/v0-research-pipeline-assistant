@@ -4,22 +4,20 @@ import {
   ACCESS_TOKEN_COOKIE,
   REFRESH_TOKEN_COOKIE,
   accessCookieOptions,
+  getSupabaseEnvStatus,
   refreshCookieOptions,
   signInWithPassword,
 } from "@/lib/supabase-auth"
 
 export async function POST(request: NextRequest) {
-  const missingEnv = [
-    !process.env.SUPABASE_URL ? "SUPABASE_URL" : null,
-    !process.env.SUPABASE_PUBLISHABLE_KEY ? "SUPABASE_PUBLISHABLE_KEY" : null,
-  ].filter(Boolean)
+  const { missing } = getSupabaseEnvStatus()
 
-  if (missingEnv.length > 0) {
-    console.error("Supabase auth configuration missing", { missing: missingEnv })
+  if (missing.length > 0) {
+    console.error("Supabase auth configuration missing", { missing })
     return NextResponse.json(
       {
         error: "Supabase authentication is not configured.",
-        missing: missingEnv,
+        missing,
       },
       {
         status: 503,
