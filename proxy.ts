@@ -18,6 +18,11 @@ function isPublicPath(pathname: string) {
   return false
 }
 
+function withPrivateNoStore(response: NextResponse) {
+  response.headers.set("Cache-Control", "private, no-store")
+  return response
+}
+
 function unauthorized(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith("/api/")) {
     return NextResponse.json(
@@ -47,10 +52,7 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(homeUrl)
     }
 
-    return NextResponse.next({
-      request,
-      headers: { "Cache-Control": "private, no-store" },
-    })
+    return withPrivateNoStore(NextResponse.next())
   }
 
   if (refreshToken) {
@@ -58,7 +60,7 @@ export async function proxy(request: NextRequest) {
     if (refreshed) {
       const response = pathname === "/login"
         ? NextResponse.redirect(new URL("/", request.url))
-        : NextResponse.next({ request })
+        : NextResponse.next()
 
       response.cookies.set(
         ACCESS_TOKEN_COOKIE,
@@ -70,16 +72,12 @@ export async function proxy(request: NextRequest) {
         refreshed.refreshToken,
         refreshCookieOptions(),
       )
-      response.headers.set("Cache-Control", "private, no-store")
-      return response
+      return withPrivateNoStore(response)
     }
   }
 
   if (isPublicPath(pathname)) {
-    return NextResponse.next({
-      request,
-      headers: { "Cache-Control": "private, no-store" },
-    })
+    return withPrivateNoStore(NextResponse.next())
   }
 
   return unauthorized(request)
