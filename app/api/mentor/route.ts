@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 
 import { isValidProjectState, type ProjectState } from "@/lib/project-state"
 import { stages } from "@/lib/stages"
+import { ACCESS_TOKEN_COOKIE, verifyAccessToken } from "@/lib/supabase-auth"
 
 export const runtime = "nodejs"
 
@@ -145,8 +146,14 @@ function getActionPreconditionBlock(action: MentorAction, projectState: ProjectS
   return null
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
+    const accessToken = req.cookies.get(ACCESS_TOKEN_COOKIE)?.value
+    const user = await verifyAccessToken(accessToken)
+    if (!user) {
+      return json({ error: "Authentication required." }, 401)
+    }
+
     const contentLength = Number(req.headers.get("content-length") || "0")
     if (contentLength > MAX_REQUEST_BYTES) {
       return json({ error: "Request payload is too large." }, 413)
