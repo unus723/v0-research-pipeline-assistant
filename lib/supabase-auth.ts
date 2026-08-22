@@ -17,8 +17,8 @@ export interface AuthSession {
 }
 
 function getSupabaseConfig() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+  const url = process.env.SUPABASE_URL
+  const publishableKey = process.env.SUPABASE_PUBLISHABLE_KEY
 
   if (!url || !publishableKey) return null
 
