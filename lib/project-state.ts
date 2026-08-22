@@ -278,13 +278,16 @@ export function isValidProjectState(value: unknown): value is ProjectState {
   if (typeof value.projectTitle !== "string") return false
   if (typeof value.currentStageId !== "string") return false
   if (!stages.some((stage) => stage.id === value.currentStageId)) return false
-  if (!isRecord(value.stages)) return false
+
+  const stageStates = value.stages
+  if (!isRecord(stageStates)) return false
+
   if (!Array.isArray(value.papers) || !value.papers.every(isValidPaper)) return false
   if (!Array.isArray(value.experiments) || !value.experiments.every(isValidExperimentResult)) return false
   if (!Array.isArray(value.decisions) || !value.decisions.every(isValidDecisionLogEntry)) return false
   if (!Array.isArray(value.assumptions) || !value.assumptions.every(isValidAssumptionLogEntry)) return false
 
-  return stages.every((stage) => isValidStageState(stage, value.stages[stage.id]))
+  return stages.every((stage) => isValidStageState(stage, stageStates[stage.id]))
 }
 
 export function parseProjectStateJson(json: string): ProjectState | null {
