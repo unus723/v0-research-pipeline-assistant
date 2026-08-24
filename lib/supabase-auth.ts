@@ -17,18 +17,15 @@ export interface AuthSession {
 }
 
 export function getSupabaseEnvStatus() {
-  const url = process.env.SUPABASE_URL || process.env.supabase_url || process.env.ratech_url
-  const publishableKey =
-    process.env.SUPABASE_PUBLISHABLE_KEY ||
-    process.env.supabase_publishable_key ||
-    process.env.ratech
+  const url = process.env.supabase_url
+  const publishableKey = process.env.supabase_publishable_key
 
   return {
     url,
     publishableKey,
     missing: [
-      !url ? "supabase_url (or SUPABASE_URL / ratech_url)" : null,
-      !publishableKey ? "ratech (or SUPABASE_PUBLISHABLE_KEY / supabase_publishable_key)" : null,
+      !url ? "supabase_url" : null,
+      !publishableKey ? "supabase_publishable_key" : null,
     ].filter((value): value is string => Boolean(value)),
   }
 }
