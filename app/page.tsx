@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { stages } from "@/lib/stages"
 import {
   createInitialProjectState,
@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button"
 import { Menu, Info } from "lucide-react"
 
 const LEGACY_STORAGE_KEY = "research-pipeline-assistant:project-state:v1"
-const SAVE_DEBOUNCE_MS = 750
+const AUTO_SAVE_INTERVAL_MS = 15_000
 
 function loadLegacyProjectState(): ProjectState | null {
   if (typeof window === "undefined") return null
@@ -219,6 +219,9 @@ export default function Page() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isGuidanceOpen, setIsGuidanceOpen] = useState(false)
   const [isMentorOpen, setIsMentorOpen] = useState(false)
+  const projectRef = useRef(project)
+  const dirtyRef = useRef(false)
+  const saveInFlightRef = useRef(false)
 
   useEffect(() => {
     let cancelled = false
@@ -242,6 +245,8 @@ export default function Page() {
           if (storedProject) {
             const parsed = parseProjectStateJson(JSON.stringify(storedProject))
             if (parsed) {
+              projectRef.current = parsed
+              dirtyRef.current = false
               setProject(parsed)
               setHasLoadedProject(true)
               return
@@ -249,13 +254,19 @@ export default function Page() {
           }
         }
 
-        setProject(legacyProject ?? createInitialProjectState())
+        const initialProject = legacyProject ?? createInitialProjectState()
+        projectRef.current = initialProject
+        dirtyRef.current = Boolean(legacyProject)
+        setProject(initialProject)
         setHasLoadedProject(true)
       } catch (error) {
         console.error("Unable to load project from server", error)
         if (cancelled) return
-        setProject(legacyProject ?? createInitialProjectState())
-        setHasLoadedProject(true)
+        const fallbackProject = legacyProject ?? createInitialProjectState()
+        projectRef.current = fallbackProject
+        dirtyRef.current = false
+        setProject(fallbackProject)
+        setHasLoadedProject(false)
       }
     }
 
@@ -266,17 +277,26 @@ export default function Page() {
   }, [])
 
   useEffect(() => {
+    projectRef.current = project
+    if (hasLoadedProject) dirtyRef.current = true
+  }, [project, hasLoadedProject])
+
+  useEffect(() => {
     if (!hasLoadedProject) return
 
-    const controller = new AbortController()
-    const timeoutId = window.setTimeout(async () => {
+    async function flushProject(options?: { keepalive?: boolean }) {
+      if (!dirtyRef.current || saveInFlightRef.current) return
+
+      const snapshot = projectRef.current
+      saveInFlightRef.current = true
+
       try {
         const response = await fetch("/api/project", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(project),
+          body: JSON.stringify(snapshot),
           cache: "no-store",
-          signal: controller.signal,
+          keepalive: options?.keepalive ?? false,
         })
 
         if (!response.ok) {
@@ -284,22 +304,42 @@ export default function Page() {
           return
         }
 
+        if (projectRef.current === snapshot) dirtyRef.current = false
+
         try {
           window.localStorage.removeItem(LEGACY_STORAGE_KEY)
         } catch {
-          // The server remains the source of truth even if legacy cleanup fails.
+          // Server persistence is the source of truth after a successful save.
         }
       } catch (error) {
-        if (error instanceof DOMException && error.name === "AbortError") return
         console.error("Unable to save project to server", error)
+      } finally {
+        saveInFlightRef.current = false
       }
-    }, SAVE_DEBOUNCE_MS)
+    }
+
+    const intervalId = window.setInterval(() => {
+      void flushProject()
+    }, AUTO_SAVE_INTERVAL_MS)
+
+    function flushWhenLeaving() {
+      void flushProject({ keepalive: true })
+    }
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === "hidden") flushWhenLeaving()
+    }
+
+    window.addEventListener("pagehide", flushWhenLeaving)
+    document.addEventListener("visibilitychange", handleVisibilityChange)
 
     return () => {
-      window.clearTimeout(timeoutId)
-      controller.abort()
+      window.clearInterval(intervalId)
+      window.removeEventListener("pagehide", flushWhenLeaving)
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
+      void flushProject({ keepalive: true })
     }
-  }, [project, hasLoadedProject])
+  }, [hasLoadedProject])
 
   const activeIndex = Math.max(
     0,
