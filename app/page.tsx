@@ -23,17 +23,18 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Button } from "@/components/ui/button"
 import { Menu, Info } from "lucide-react"
 
-const STORAGE_KEY = "research-pipeline-assistant:project-state:v1"
+const LEGACY_STORAGE_KEY = "research-pipeline-assistant:project-state:v1"
+const SAVE_DEBOUNCE_MS = 750
 
-function loadStoredProjectState(): ProjectState {
-  if (typeof window === "undefined") return createInitialProjectState()
+function loadLegacyProjectState(): ProjectState | null {
+  if (typeof window === "undefined") return null
 
   try {
-    const stored = window.localStorage.getItem(STORAGE_KEY)
-    if (!stored) return createInitialProjectState()
-    return parseProjectStateJson(stored) ?? createInitialProjectState()
+    const stored = window.localStorage.getItem(LEGACY_STORAGE_KEY)
+    if (!stored) return null
+    return parseProjectStateJson(stored)
   } catch {
-    return createInitialProjectState()
+    return null
   }
 }
 
@@ -81,7 +82,7 @@ function md(value: string | undefined) {
 }
 
 function escapeTableCell(value: string | undefined) {
-  return md(value).replace(/\\|/g, "\\\\|").replace(/\\r?\\n/g, "<br>")
+  return md(value).replace(/\|/g, "\\|").replace(/\r?\n/g, "<br>")
 }
 
 function createResearchPlanMarkdown(project: ProjectState) {
@@ -209,30 +210,96 @@ function createResearchPlanMarkdown(project: ProjectState) {
   }
   lines.push("")
 
-  return lines.join("\\n")
+  return lines.join("\n")
 }
 
 export default function Page() {
   const [project, setProject] = useState<ProjectState>(() => createInitialProjectState())
-  const [hasLoadedStorage, setHasLoadedStorage] = useState(false)
+  const [hasLoadedProject, setHasLoadedProject] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isGuidanceOpen, setIsGuidanceOpen] = useState(false)
   const [isMentorOpen, setIsMentorOpen] = useState(false)
 
   useEffect(() => {
-    setProject(loadStoredProjectState())
-    setHasLoadedStorage(true)
+    let cancelled = false
+
+    async function loadProject() {
+      const legacyProject = loadLegacyProjectState()
+
+      try {
+        const response = await fetch("/api/project", {
+          method: "GET",
+          cache: "no-store",
+        })
+
+        if (!response.ok) throw new Error(`Project load failed with status ${response.status}.`)
+
+        const payload: unknown = await response.json()
+        if (cancelled) return
+
+        if (payload && typeof payload === "object" && "project" in payload) {
+          const storedProject = (payload as { project?: unknown }).project
+          if (storedProject) {
+            const parsed = parseProjectStateJson(JSON.stringify(storedProject))
+            if (parsed) {
+              setProject(parsed)
+              setHasLoadedProject(true)
+              return
+            }
+          }
+        }
+
+        setProject(legacyProject ?? createInitialProjectState())
+        setHasLoadedProject(true)
+      } catch (error) {
+        console.error("Unable to load project from server", error)
+        if (cancelled) return
+        setProject(legacyProject ?? createInitialProjectState())
+        setHasLoadedProject(true)
+      }
+    }
+
+    void loadProject()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   useEffect(() => {
-    if (!hasLoadedStorage) return
+    if (!hasLoadedProject) return
 
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(project))
-    } catch {
-      // Storage can fail in private mode or when quota is exceeded. Keep the app usable.
+    const controller = new AbortController()
+    const timeoutId = window.setTimeout(async () => {
+      try {
+        const response = await fetch("/api/project", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(project),
+          cache: "no-store",
+          signal: controller.signal,
+        })
+
+        if (!response.ok) {
+          console.error("Unable to save project", { status: response.status })
+          return
+        }
+
+        try {
+          window.localStorage.removeItem(LEGACY_STORAGE_KEY)
+        } catch {
+          // The server remains the source of truth even if legacy cleanup fails.
+        }
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return
+        console.error("Unable to save project to server", error)
+      }
+    }, SAVE_DEBOUNCE_MS)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+      controller.abort()
     }
-  }, [project, hasLoadedStorage])
+  }, [project, hasLoadedProject])
 
   const activeIndex = Math.max(
     0,
@@ -336,7 +403,7 @@ export default function Page() {
   }
 
   function resetProject() {
-    const confirmed = window.confirm("Reset this project? This clears all saved progress in this browser.")
+    const confirmed = window.confirm("Reset this project? This clears all saved progress for your account.")
     if (!confirmed) return
     setProject(createInitialProjectState())
   }
