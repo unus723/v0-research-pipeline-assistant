@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { stages } from "@/lib/stages"
 import {
   createInitialProjectState,
@@ -23,17 +23,18 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Button } from "@/components/ui/button"
 import { Menu, Info } from "lucide-react"
 
-const STORAGE_KEY = "research-pipeline-assistant:project-state:v1"
+const LEGACY_STORAGE_KEY = "research-pipeline-assistant:project-state:v1"
+const AUTO_SAVE_INTERVAL_MS = 15_000
 
-function loadStoredProjectState(): ProjectState {
-  if (typeof window === "undefined") return createInitialProjectState()
+function loadLegacyProjectState(): ProjectState | null {
+  if (typeof window === "undefined") return null
 
   try {
-    const stored = window.localStorage.getItem(STORAGE_KEY)
-    if (!stored) return createInitialProjectState()
-    return parseProjectStateJson(stored) ?? createInitialProjectState()
+    const stored = window.localStorage.getItem(LEGACY_STORAGE_KEY)
+    if (!stored) return null
+    return parseProjectStateJson(stored)
   } catch {
-    return createInitialProjectState()
+    return null
   }
 }
 
@@ -81,7 +82,7 @@ function md(value: string | undefined) {
 }
 
 function escapeTableCell(value: string | undefined) {
-  return md(value).replace(/\\|/g, "\\\\|").replace(/\\r?\\n/g, "<br>")
+  return md(value).replace(/\|/g, "\\|").replace(/\r?\n/g, "<br>")
 }
 
 function createResearchPlanMarkdown(project: ProjectState) {
@@ -209,30 +210,136 @@ function createResearchPlanMarkdown(project: ProjectState) {
   }
   lines.push("")
 
-  return lines.join("\\n")
+  return lines.join("\n")
 }
 
 export default function Page() {
   const [project, setProject] = useState<ProjectState>(() => createInitialProjectState())
-  const [hasLoadedStorage, setHasLoadedStorage] = useState(false)
+  const [hasLoadedProject, setHasLoadedProject] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isGuidanceOpen, setIsGuidanceOpen] = useState(false)
   const [isMentorOpen, setIsMentorOpen] = useState(false)
+  const projectRef = useRef(project)
+  const dirtyRef = useRef(false)
+  const saveInFlightRef = useRef(false)
 
   useEffect(() => {
-    setProject(loadStoredProjectState())
-    setHasLoadedStorage(true)
+    let cancelled = false
+
+    async function loadProject() {
+      const legacyProject = loadLegacyProjectState()
+
+      try {
+        const response = await fetch("/api/project", {
+          method: "GET",
+          cache: "no-store",
+        })
+
+        if (!response.ok) throw new Error(`Project load failed with status ${response.status}.`)
+
+        const payload: unknown = await response.json()
+        if (cancelled) return
+
+        if (payload && typeof payload === "object" && "project" in payload) {
+          const storedProject = (payload as { project?: unknown }).project
+          if (storedProject) {
+            const parsed = parseProjectStateJson(JSON.stringify(storedProject))
+            if (parsed) {
+              projectRef.current = parsed
+              dirtyRef.current = false
+              setProject(parsed)
+              setHasLoadedProject(true)
+              return
+            }
+          }
+        }
+
+        const initialProject = legacyProject ?? createInitialProjectState()
+        projectRef.current = initialProject
+        dirtyRef.current = Boolean(legacyProject)
+        setProject(initialProject)
+        setHasLoadedProject(true)
+      } catch (error) {
+        console.error("Unable to load project from server", error)
+        if (cancelled) return
+        const fallbackProject = legacyProject ?? createInitialProjectState()
+        projectRef.current = fallbackProject
+        dirtyRef.current = false
+        setProject(fallbackProject)
+        setHasLoadedProject(false)
+      }
+    }
+
+    void loadProject()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   useEffect(() => {
-    if (!hasLoadedStorage) return
+    projectRef.current = project
+    if (hasLoadedProject) dirtyRef.current = true
+  }, [project, hasLoadedProject])
 
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(project))
-    } catch {
-      // Storage can fail in private mode or when quota is exceeded. Keep the app usable.
+  useEffect(() => {
+    if (!hasLoadedProject) return
+
+    async function flushProject(options?: { keepalive?: boolean }) {
+      if (!dirtyRef.current || saveInFlightRef.current) return
+
+      const snapshot = projectRef.current
+      saveInFlightRef.current = true
+
+      try {
+        const response = await fetch("/api/project", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(snapshot),
+          cache: "no-store",
+          keepalive: options?.keepalive ?? false,
+        })
+
+        if (!response.ok) {
+          console.error("Unable to save project", { status: response.status })
+          return
+        }
+
+        if (projectRef.current === snapshot) dirtyRef.current = false
+
+        try {
+          window.localStorage.removeItem(LEGACY_STORAGE_KEY)
+        } catch {
+          // Server persistence is the source of truth after a successful save.
+        }
+      } catch (error) {
+        console.error("Unable to save project to server", error)
+      } finally {
+        saveInFlightRef.current = false
+      }
     }
-  }, [project, hasLoadedStorage])
+
+    const intervalId = window.setInterval(() => {
+      void flushProject()
+    }, AUTO_SAVE_INTERVAL_MS)
+
+    function flushWhenLeaving() {
+      void flushProject({ keepalive: true })
+    }
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === "hidden") flushWhenLeaving()
+    }
+
+    window.addEventListener("pagehide", flushWhenLeaving)
+    document.addEventListener("visibilitychange", handleVisibilityChange)
+
+    return () => {
+      window.clearInterval(intervalId)
+      window.removeEventListener("pagehide", flushWhenLeaving)
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
+      void flushProject({ keepalive: true })
+    }
+  }, [hasLoadedProject])
 
   const activeIndex = Math.max(
     0,
@@ -336,7 +443,7 @@ export default function Page() {
   }
 
   function resetProject() {
-    const confirmed = window.confirm("Reset this project? This clears all saved progress in this browser.")
+    const confirmed = window.confirm("Reset this project? This clears all saved progress for your account.")
     if (!confirmed) return
     setProject(createInitialProjectState())
   }
